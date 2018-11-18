@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ops;
 
-use bytes::{BigEndian, Buf, BufMut, Bytes, BytesMut, IntoBuf};
+use bytes::{Buf, BufMut, Bytes, BytesMut, IntoBuf};
 use bytes::buf::FromBuf;
 
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -25,19 +25,19 @@ impl VarNumber {
             x @ 253...0xFFFF => {
                 let mut bytes = BytesMut::with_capacity(3);
                 bytes.put_u8(253);
-                bytes.put_u16::<BigEndian>(x as u16);
+                bytes.put_u16_be(x as u16);
                 bytes
             }
             x @ 0x1_0000...0xFFFF_FFFF => {
                 let mut bytes = BytesMut::with_capacity(5);
                 bytes.put_u8(254);
-                bytes.put_u32::<BigEndian>(x as u32);
+                bytes.put_u32_be(x as u32);
                 bytes
             }
             x @ 0x1_0000_0000...0xFFFF_FFFF_FFFF_FFFF => {
                 let mut bytes = BytesMut::with_capacity(9);
                 bytes.put_u8(255);
-                bytes.put_u64::<BigEndian>(x);
+                bytes.put_u64_be(x);
                 bytes
             }
             _ => unreachable!(),
@@ -121,9 +121,9 @@ impl FromBuf for VarNumber {
         let mut buf = buf.into_buf();
         let n = match buf.get_u8() {
             x @ 0...252 => u64::from(x),
-            253 => u64::from(buf.get_u16::<BigEndian>()),
-            254 => u64::from(buf.get_u32::<BigEndian>()),
-            255 => buf.get_u64::<BigEndian>(),
+            253 => u64::from(buf.get_u16_be()),
+            254 => u64::from(buf.get_u32_be()),
+            255 => buf.get_u64_be(),
             _ => unreachable!(),
         };
         VarNumber::from_u64(n)
